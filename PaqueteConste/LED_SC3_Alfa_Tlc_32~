@@ -1,0 +1,194 @@
+/*
+Aqui se conecta el SuperCollider con el puerto Serial e inicia la rutina de lectura
+(
+~led_SC3_Alfa_Tlc_32= SerialPort("/dev/ttyUSB0",9600,crtscts: true);
+Tdef(\alfa_Tlc_32).play;
+)
+Aqui se desconecta el SuperCollider del puerto Serial y detiene la rutina de lectura
+(
+Tdef(\alfa_Tlc_32).stop;
+~led_SC3_Alfa_Tlc_32.close;
+)
+
+~waitAlfaTLC=0.005;
+
+~fTodosLEDsOn.value;
+~fTodosLEDsOff.value;
+
+
+Aqui se asigna el valor de máxima intensiad a los LEDs, 254
+(
+~fTodosLEDsOn={
+~led2=254;
+~led3=254;
+~led4=254;
+~led5=254;
+~led6=254;
+~led7=254;
+~led8=254;
+~led9=254;
+~led10=254;
+~led11=254;
+~led12=254;
+~led13=254;
+~led14=254;
+~led15=254;
+~led16=254;
+~led17=254;
+
+
+~led18=254;
+~led19=254;
+~led20=254;
+~led21=254;
+~led22=254;
+~led23=254;
+~led24=254;
+~led25=254;
+~led26=254;
+~led27=254;
+~led28=254;
+~led29=254;
+~led30=254;
+~led31=254;
+~led32=254;
+~led33=254;
+};
+~fTodosLEDsOn.value;
+)
+
+Aqui se asigna un valor aleatorio entre el mínimo y el máximo de intensiad a los LEDs
+(
+~led2=[0,254].choose;
+~led3=[0,254].choose;
+~led4=[0,254].choose;
+~led5=[0,254].choose;
+~led6=[0,254].choose;
+~led7=[0,254].choose;
+~led8=[0,254].choose;
+~led9=[0,254].choose;
+~led10=[0,254].choose;
+~led11=[0,254].choose;
+~led12=[0,254].choose;
+~led13=[0,254].choose;
+~led14=[0,254].choose;
+~led15=[0,254].choose;
+~led16=[0,254].choose;
+~led17=[0,254].choose;
+
+~led18=[0,254].choose;
+~led19=[0,254].choose;
+~led20=[0,254].choose;
+~led21=[0,254].choose;
+~led22=[0,254].choose;
+~led23=[0,254].choose;
+~led24=[0,254].choose;
+~led25=[0,254].choose;
+~led26=[0,254].choose;
+~led27=[0,254].choose;
+~led28=[0,254].choose;
+~led29=[0,254].choose;
+~led30=[0,254].choose;
+~led31=[0,254].choose;
+~led32=[0,254].choose;
+~led33=[0,254].choose;
+)
+
+Aqui se asigna el valor de mínima intensiad a los LEDs, 0 (apagados)
+(
+~fTodosLEDsOff={
+~led2=0;
+~led3=0;
+~led4=0;
+~led5=0;
+~led6=0;
+~led7=0;
+~led8=0;
+~led9=0;
+~led10=0;
+~led11=0;
+~led12=0;
+~led13=0;
+~led14=0;
+~led15=0;
+~led16=0;
+~led17=0;
+
+
+~led18=0;
+~led19=0;
+~led20=0;
+~led21=0;
+~led22=0;
+~led23=0;
+~led24=0;
+~led25=0;
+~led26=0;
+~led27=0;
+~led28=0;
+~led29=0;
+~led30=0;
+~led31=0;
+~led32=0;
+~led33=0;
+};
+~fTodosLEDsOff.value;
+)
+*/
+(
+/*
+Aqui esta la rutina de comunicación por el puerto Serial en la que SuperCollider manda los valores de intensidad de cada LED. Al inicio los LEDs tienen el valor de intensidad 254 que es el máximo.
+*/
+
+
+~led2=254;~led3=254;~led4=254;~led5=254;~led6=254;~led7=254;~led8=254;~led9=254;
+~led10=254;~led11=254;~led12=254;~led13=254;~led14=254;~led15=254;~led16=254;~led17=254;
+
+~led18=254;~led19=254;~led20=254;~led21=254;~led22=254;~led23=254;~led24=254;~led25=254;
+~led26=254;~led27=254;~led28=254;~led29=254;~led30=254;~led31=254;~led32=254;~led33=254;
+
+// ~waitAlfaTLC=0.005; // originalmentre
+~waitAlfaTLC=0.005;
+
+Tdef(\alfa_Tlc_32, {
+		inf.do{
+			~led_SC3_Alfa_Tlc_32.put(255);~waitAlfaTLC.wait;
+			
+			~led_SC3_Alfa_Tlc_32.put(~led2);~waitAlfaTLC.wait;			
+			~led_SC3_Alfa_Tlc_32.put(~led3);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led4);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led5);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led6);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led7);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led8);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led9);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led10);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led11);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led12);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led13);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led14);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led15);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led16);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led17);~waitAlfaTLC.wait;
+			
+			~led_SC3_Alfa_Tlc_32.put(~led18);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led19);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led20);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led21);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led22);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led23);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led24);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led25);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led26);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led27);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led28);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led29);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led30);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led31);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led32);~waitAlfaTLC.wait;
+			~led_SC3_Alfa_Tlc_32.put(~led33);~waitAlfaTLC.wait;
+			
+			
+			}
+		}).quant_(0);
+);

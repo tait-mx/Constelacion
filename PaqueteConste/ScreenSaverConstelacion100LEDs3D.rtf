@@ -1,0 +1,261 @@
+{\rtf1\mac\ansicpg10000\cocoartf824\cocoasubrtf480
+{\fonttbl\f0\fnil\fcharset77 Monaco;}
+{\colortbl;\red255\green255\blue255;\red191\green0\blue0;\red0\green0\blue191;\red0\green115\blue0;
+\red96\green96\blue96;}
+\deftab560
+\pard\pardeftab560\ql\qnatural
+
+\f0\fs32 \cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\cf2 \
+*/\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 \
+\pard\pardeftab560\li1120\fi-1120\ql\qnatural
+\cf2 // Colores\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+\cf0 b=Array.fill(10,Color.white!10)\
+\
+\pard\pardeftab560\li1120\fi-1120\ql\qnatural
+\cf2 // Ventana\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf0 (\
+~ventanaScreenSaver=\{\
+~factorSS=60;\
+~screenSaver = \cf3 SCWindow\cf0 (\cf5 "Conste"\cf0 , \cf3 Rect\cf0 (400,10,(~factorSS*10)+~factorSS,(~factorSS*10)+~factorSS)).front;\
+~screenSaver.onClose=\{\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop\};\
+~screenSaver.view.background_(\cf3 Color\cf0 .black);\
+~screenSaver.drawHook = \{\
+			                \cf3 SCPen\cf0 .translate(~factorSS, ~factorSS);\
+			                10.do\{\cf3 |c| \
+			                			10.do\{|d|\cf0 \
+\cf3 			                			      SCPen\cf0 .color = b[c][d];\
+			                			      \cf3 SCPen\cf0 .addWedge((c*~factorSS)@(d*~factorSS), 5, 2pi, 2pi);\
+			                			      \cf3 SCPen\cf0 .perform(\cf4 \\fill\cf0 );\
+			                			      \}\
+			               	      \};\
+			               	\};\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\};\
+~ventanaScreenSaver.value;\
+);\
+\
+\pard\pardeftab560\li1120\fi-1120\ql\qnatural
+\cf2 // Movimiento\cf0 \
+\pard\pardeftab560\ql\qnatural
+\cf0 \
+\cf2 // Aleatorio\cf0 \
+(\
+~waitScreenSaver=0.1;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{\
+                   ~modo=1;\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							\cf3 inf\cf0 .do\{\
+							       b=Array.fill(10,\{\{[Color.white,Color.black].choose\}!10\});\
+									 \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\cf0 \
+\
+\cf2 // Circulo\cf0 \
+(\
+~waitScreenSaver=0.015;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{\
+                   ~modo=2;\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							\cf3 inf\cf0 .do\{\cf3 |k|\cf0 \
+							       ~coordPolSS=(\cf3 Polar\cf0 (4,((k%100)/100)*2pi).asPoint);\
+							       b[~coordPolSS.x.round+5][~coordPolSS.y.round+5]=\cf3 Color\cf0 .white;\
+									 \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 b[~coordPolSS.x.round+5][~coordPolSS.y.round+5]=\cf3 Color\cf0 .black;\
+									 \
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\
+\
+// Brown Seguidores\cf0 \
+(\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{var seguidores=Array.fill(5,\{0!2\});\
+                   ~modo=3;\
+							~waitScreenSaver=0.15;\
+							~coordBrownSS=[5,5];\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							\cf3 inf\cf0 .do\{|i|\
+							       ~coordBrownSS[0]=~coordBrownSS[0]+[-1,0,1].choose;\
+							       if(~coordBrownSS[0]<0,\{~coordBrownSS[0]=0\});\
+							       if(~coordBrownSS[0]>9,\{~coordBrownSS[0]=9\});\
+							       \
+							       ~coordBrownSS[1]=~coordBrownSS[1]+[-1,0,1].choose;\
+							       if(~coordBrownSS[1]<0,\{~coordBrownSS[1]=0\});\
+							       if(~coordBrownSS[1]>9,\{~coordBrownSS[1]=9\});\
+							       \
+							       b[~coordBrownSS[0]][~coordBrownSS[1]]=\cf3 Color\cf0 .white;\
+							       \
+							       5.do\{|k| seguidores[k][0]=~coordBrownSS[0]+[-1,1].choose;\
+							                seguidores[k][1]=~coordBrownSS[1]+[-1,1].choose;\
+							               2.do\{|l| if(seguidores[k][l]<0,\{seguidores[k][l]=0\});\
+							                        if(seguidores[k][l]>9,\{seguidores[k][l]=9\})\};\
+							                b[seguidores[k][0]][seguidores[k][1]]=\cf3 Color\cf0 .white\
+							           \};\
+							           \
+									 \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 b[~coordBrownSS[0]][~coordBrownSS[1]]=\cf3 Color\cf0 .black;\
+									 5.do\{|k| b[seguidores[k][0]][seguidores[k][1]]=\cf3 Color\cf0 .black\};\
+									 \
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\cf0 \
+\
+\cf2 // Brown rastro\cf0 \
+(\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{var seguidores=Array.fill(5,\{0!2\});\
+                   ~modo=3;\
+							~waitScreenSaver=0.15;\
+							~coordBrownSS=[5,5];\
+							~arrayRastroBrown=Array.fill(5,\{[5,5]\});\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							\cf3 inf\cf0 .do\{\
+									5.do\{|i|\
+							       ~coordBrownSS[0]=~coordBrownSS[0]+[-1,0,1].choose;\
+							       if(~coordBrownSS[0]<0,\{~coordBrownSS[0]=0\});\
+							       if(~coordBrownSS[0]>9,\{~coordBrownSS[0]=9\});\
+							       \
+							       ~coordBrownSS[1]=~coordBrownSS[1]+[-1,0,1].choose;\
+							       if(~coordBrownSS[1]<0,\{~coordBrownSS[1]=0\});\
+							       if(~coordBrownSS[1]>9,\{~coordBrownSS[1]=9\});\
+							       \
+							       ~arrayRastroBrown[i][0]=~coordBrownSS[0];\
+							       ~arrayRastroBrown[i][1]=~coordBrownSS[1];\
+							       \
+							       ~arrayRastroBrown.postln;\
+							       \
+							       b[~arrayRastroBrown[i][0]][~arrayRastroBrown[i][1]]=\cf3 Color\cf0 .white;\
+							       \
+							       \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 b[~arrayRastroBrown[i][0]][~arrayRastroBrown[i][1]]=\cf3 Color\cf0 .black;\
+									    \}\
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\cf0 \
+\
+\
+\cf2 // Circulo Seguidores Brown\cf0 \
+(\
+~waitScreenSaver=0.05;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{var seguidores=Array.fill(10,\{0!2\}),veces;\
+                   ~modo=2;\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							\cf3 inf\cf0 .do\{\cf3 |m|\cf0 \
+							       ~coordPolSS=(\cf3 Polar\cf0 (4,((m%100)/100)*2pi).asPoint);\
+							       b[~coordPolSS.x.round+5][~coordPolSS.y.round+5]=\cf3 Color\cf0 .white;\
+							       veces=rrand(3,7);\
+							       veces.do\{|k| seguidores[k][0]=(~coordPolSS.x.round+5)+[-1,0,1].choose;\
+							                seguidores[k][1]=(~coordPolSS.y.round+5)+[-1,0,1].choose;\
+							               2.do\{|l| if(seguidores[k][l]<0,\{seguidores[k][l]=0\});\
+							                        if(seguidores[k][l]>9,\{seguidores[k][l]=9\})\};\
+							                b[seguidores[k][0]][seguidores[k][1]]=\cf3 Color\cf0 .white\
+							           \};\
+							       \
+									 \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 b[~coordPolSS.x.round+5][~coordPolSS.y.round+5]=\cf3 Color\cf0 .black;\
+									 veces.do\{|k| b[seguidores[k][0]][seguidores[k][1]]=\cf3 Color\cf0 .black\};\
+									 \
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\cf0 		\
+\
+\cf2 // Seno Seguidores\cf0 \
+(\
+~waitScreenSaver=0.05;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{var seguidores=Array.fill(10,\{0!2\}),veces;\
+                   ~modo=2;\
+                   ~ampSenSS=3;\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							\cf3 inf\cf0 .do\{\cf3 |m|\cf0 \
+							       ~coordSenSS=[((m%100)/10).round,((((m%100)/10)*2pi).sin*~ampSenSS+5).round];\
+							       if(~coordSenSS[0]<0,\{~coordSenSS[0]=0\});\
+							       if(~coordSenSS[0]>9,\{~coordSenSS[0]=9\});\
+							       if(~coordSenSS[1]<0,\{~coordSenSS[1]=0\});\
+							       if(~coordSenSS[1]>9,\{~coordSenSS[1]=9\});\
+							       \
+							       b[~coordSenSS[0]][~coordSenSS[1]]=\cf3 Color\cf0 .white;\
+							       veces=rrand(3,7);\
+							       veces.do\{|k| seguidores[k][0]=(~coordSenSS[0])+[-1,0,1].choose;\
+							                seguidores[k][1]=(~coordSenSS[1])+[-1,0,1].choose;\
+							               2.do\{|l| if(seguidores[k][l]<0,\{seguidores[k][l]=0\});\
+							                        if(seguidores[k][l]>9,\{seguidores[k][l]=9\})\};\
+							                b[seguidores[k][0]][seguidores[k][1]]=\cf3 Color\cf0 .white\
+							           \};\
+							       \
+									 \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 b[~coordSenSS[0]][~coordSenSS[1]]=\cf3 Color\cf0 .black;\
+									 veces.do\{|k| b[seguidores[k][0]][seguidores[k][1]]=\cf3 Color\cf0 .black\};\
+									 \
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\cf0 		\
+\
+\cf2 // Circulo rastro\cf0 \
+(\
+~waitScreenSaver=0.05;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 , \{\
+                   ~modo=2;\
+							b=\cf3 Array\cf0 .fill(10,\{\cf3 Color\cf0 .black!10\});\
+							~rastroSS=Array.fill(14,\{nil\});\
+							\cf3 inf\cf0 .do\{\cf3 |k|\
+							\
+							       \cf0 ~rastroSS.size.do\{|r| ~rastroSS[r]=\cf3 Polar\cf0 (4,(((k -r)%100)/100)*2pi).asPoint\};\cf3 \
+							       \cf0 ~rastroSS.size.do\{|o| \
+							       b[~rastroSS[o].x.round+5][~rastroSS[o].y.round+5]=\cf3 Color\cf0 .white;\
+							       \};\
+							       \
+									 \{~screenSaver.refresh\}.defer;\
+									 ~waitScreenSaver.wait;\
+									 ~rastroSS.size.do\{|p| \
+									 b[~rastroSS[p].x.round+5][~rastroSS[p].y.round+5]=\cf3 Color\cf0 .black;\
+									                  \};\
+									 \}\
+							\}).quant_(0);\
+);\
+\cf2 /*\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).play;\
+\cf3 Tdef\cf0 (\cf4 \\screenSaver\cf0 ).stop;\
+~ventanaScreenSaver.value;\cf2 \
+*/\
+}

@@ -1,0 +1,157 @@
+~todosLosLEDs=[~led2,~led3,~led4,~led5,~led6,~led7,~led8,~led9,~led10,~led11,~led12,~led13,~led14,~led15,~led16,~led17, ~led18,~led19,~led20,~led21,~led22,~led23,~led24,~led25,~led26,~led27,~led28,~led29,~led30,~led31,~led32,~led33]
+
+
+
+
+(
+~waitIncreible32=0.3;
+Tdef(\increible32,  {
+				inf.do{|i|
+					   ~led2=254;
+					   ~waitIncreible32.wait;
+					    ~led2=0;
+					   ~waitIncreible32.wait;
+					   ~led3=254;
+					   ~waitIncreible32.wait;
+					    ~led3=0;
+					   ~waitIncreible32.wait;
+					   ~led4=254;
+					   ~waitIncreible32.wait;
+					    ~led4=0;
+					   ~waitIncreible32.wait;
+					   ~led5=254;
+					   ~waitIncreible32.wait;
+					    ~led5=0;
+					   ~waitIncreible32.wait;
+					   ~led6=254;
+					   ~waitIncreible32.wait;
+					    ~led6=0;
+					   ~waitIncreible32.wait;
+					   ~led7=254;
+					   ~waitIncreible32.wait;
+					    ~led7=0;
+					   ~waitIncreible32.wait;
+					   ~led8=254;
+					   ~waitIncreible32.wait;
+					    ~led8=0;
+					   ~waitIncreible32.wait;
+					   ~led9=254;
+					   ~waitIncreible32.wait;
+					    ~led9=0;
+					   ~waitIncreible32.wait;
+					   ~led10=254;
+					   ~waitIncreible32.wait;
+					    ~led10=0;
+					   ~waitIncreible32.wait;
+					   ~led11=254;
+					   ~waitIncreible32.wait;
+					    ~led11=0;
+					   ~waitIncreible32.wait;
+					   ~led12=254;
+					   ~waitIncreible32.wait;
+					    ~led12=0;
+					   ~waitIncreible32.wait;
+					   ~led13=254;
+					   ~waitIncreible32.wait;
+					    ~led13=0;
+					   ~waitIncreible32.wait;
+					   ~led14=254;
+					   ~waitIncreible32.wait;
+					    ~led14=0;
+					   ~waitIncreible32.wait;
+					   ~led15=254;
+					   ~waitIncreible32.wait;
+					    ~led15=0;
+					   ~waitIncreible32.wait;
+					   ~led16=254;
+					   ~waitIncreible32.wait;
+					    ~led16=0;
+					   ~waitIncreible32.wait;
+					   ~led17=254;
+					   ~waitIncreible32.wait;
+					    ~led17=0;
+					   ~waitIncreible32.wait;
+					   
+					   ~led18=254;
+					   ~waitIncreible32.wait;
+					    ~led18=0;
+					   ~waitIncreible32.wait;
+					   ~led19=254;
+					   ~waitIncreible32.wait;
+					    ~led19=0;
+					   ~waitIncreible32.wait;
+					   ~led20=254;
+					   ~waitIncreible32.wait;
+					    ~led20=0;
+					   ~waitIncreible32.wait;
+					   ~led21=254;
+					   ~waitIncreible32.wait;
+					    ~led21=0;
+					   ~waitIncreible32.wait;
+					   ~led22=254;
+					   ~waitIncreible32.wait;
+					    ~led22=0;
+					   ~waitIncreible32.wait;
+					   ~led23=254;
+					   ~waitIncreible32.wait;
+					    ~led23=0;
+					   ~waitIncreible32.wait;
+					   ~led24=254;
+					   ~waitIncreible32.wait;
+					    ~led24=0;
+					   ~waitIncreible32.wait;
+					   ~led25=254;
+					   ~waitIncreible32.wait;
+					    ~led25=0;
+					   ~waitIncreible32.wait;
+					   ~led26=254;
+					   ~waitIncreible32.wait;
+					    ~led26=0;
+					   ~waitIncreible32.wait;
+					   ~led27=254;
+					   ~waitIncreible32.wait;
+					    ~led27=0;
+					   ~waitIncreible32.wait;
+					   ~led28=254;
+					   ~waitIncreible32.wait;
+					    ~led28=0;
+					   ~waitIncreible32.wait;
+					   ~led29=254;
+					   ~waitIncreible32.wait;
+					    ~led29=0;
+					   ~waitIncreible32.wait;
+					   ~led30=254;
+					   ~waitIncreible32.wait;
+					    ~led30=0;
+					   ~waitIncreible32.wait;
+					   ~led31=254;
+					   ~waitIncreible32.wait;
+					    ~led31=0;
+					   ~waitIncreible32.wait;
+					   ~led32=254;
+					   ~waitIncreible32.wait;
+					    ~led32=0;
+					   ~waitIncreible32.wait;
+					   ~led33=254;
+					   ~waitIncreible32.wait;
+					    ~led33=0;
+					   ~waitIncreible32.wait;
+					   }
+				}).quant_(0);
+)
+Tdef(\increible32).play
+Tdef(\increible32).stop			   
+
+(
+Tdef(\todosOnOff, {
+				  inf.do{
+      					     ~fTodosLEDsOn.value;
+      					     0.5.wait;
+      					     ~fTodosLEDsOff.value;
+      					     0.5.wait;
+      					     }
+      			          }).quant_(0);
+)
+
+Tdef(\todosOnOff).play
+Tdef(\todosOnOff).stop
