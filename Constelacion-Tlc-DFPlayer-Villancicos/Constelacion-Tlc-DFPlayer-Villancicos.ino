@@ -62,7 +62,7 @@ bool introDone = false;
 int introStep = 12;
 unsigned long introStartMs = 0;
 
-bool stopped = false;
+bool stopped = true;
 
 // ---------------------------------------------------------------------------
 // DFPlayer globals
@@ -95,6 +95,7 @@ void setup() {
   myDFPlayer.begin(DFPlayerSerial);
   myDFPlayer.volume(30);   // De 0 a 30
   myDFPlayer.reset();
+  runIntroBlocking();      // power-on descending scale before waiting for PLAY
 }
 
 // ---------------------------------------------------------------------------
@@ -204,7 +205,7 @@ void updateLEDsequence() {
     case NOTE_ON: {
       if ((unsigned long)(millis() - noteStartMs) >= (unsigned long)dur) {
         noteIndex++;
-        if (noteIndex >= s->len) noteIndex = 0;   // loop the song
+        if (noteIndex >= s->len) { stopSequence(); return; }
         noteState = NOTE_START;
       }
       break;
@@ -232,6 +233,18 @@ void runIntro() {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+void runIntroBlocking() {
+  unsigned long start = millis();
+  for (int step = 12; step >= 0; step--) {
+    if (step < 12) Tlc.set(step + 1, 0);
+    Tlc.set(step, 4080);
+    while (Tlc.update());
+    start = millis();
+    while (millis() - start < 250) Tlc.update();
+  }
+  apagar();
+}
 
 void apagar() {
   for (int i = 0; i <= 15; i++) {
