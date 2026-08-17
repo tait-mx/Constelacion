@@ -11,7 +11,7 @@
    (9/10/11/12/50/51/52/53), no conflict with pins 22-27.
 
    The LED sequencer is non-blocking (millis() driven) so the buttons are
-   always polled while the villancicos play.
+   always polled while the villancicos play.  Each note's LED stays lit for   the note's full duration and hands off to the next note without going dark.
 */
 
 #include <SoftwareSerial.h>
@@ -22,14 +22,16 @@
 // Villancico data
 // ---------------------------------------------------------------------------
 
+#define SILENCE -1   // sentinel: no LED lit during this beat
+
 float tempo = 4000;   // ms per whole note
 
 //                       5                                 10                                         17                                                                   27                                                               37                                              44                                                    52
-int notasNocheDePaz[] =    {15,   7,     9,     7,    4,   15,       7,     9,     7,    4,   15,       2,   2,    11,  11,   12,  12,   7,          9,   9,    12,    11,    9,    7,    9,      7,    4,   15,        9,   9,    12,    11,    9,    7,    9,      7,   4,   15,       2,   2,    5,     2,     11,   0,    4,       12,     7,     4,    7,     5,     2,    0,    15};
-float dursNocheDePaz[] =   {0.75, 0.375, 0.125, 0.25, 0.5, 0.25,     0.375, 0.125, 0.25, 0.5, 0.25,     0.5, 0.25, 0.5, 0.25, 0.5, 0.25, 0.75,       0.5, 0.25, 0.375, 0.125, 0.25, 0.375, 0.125, 0.25, 0.5, 0.25,      0.5, 0.25, 0.375, 0.125, 0.25, 0.375, 0.125, 0.25, 0.5, 0.25,    0.5, 0.25, 0.375, 0.125, 0.25, 0.75, 0.5,     0.375, 0.125, 0.25, 0.375, 0.125, 0.25, 0.75, 0.75};
+int notasNocheDePaz[] =    {7,     9,     7,    4,   SILENCE,  7,     9,     7,    4,   SILENCE,  2,   2,    11,  11,   12,  12,   7,          9,   9,    12,    11,    9,    7,    9,      7,    4,   SILENCE,   9,   9,    12,    11,    9,    7,    9,      7,   4,   SILENCE,  2,   2,    5,     2,     11,   0,    4,       12,     7,     4,    7,     5,     2,    0,    SILENCE};
+float dursNocheDePaz[] =   {0.375, 0.125, 0.25, 0.5, 0.25,     0.375, 0.125, 0.25, 0.5, 0.25,     0.5, 0.25, 0.5, 0.25, 0.5, 0.25, 0.75,       0.5, 0.25, 0.375, 0.125, 0.25, 0.375, 0.125, 0.25, 0.5, 0.25,      0.5, 0.25, 0.375, 0.125, 0.25, 0.375, 0.125, 0.25, 0.5, 0.25,    0.5, 0.25, 0.375, 0.125, 0.25, 0.75, 0.5,     0.375, 0.125, 0.25, 0.375, 0.125, 0.25, 0.75, 0.75};
 
-int notasNinoDelTambor[] =  {15,   0,    2,    4,   4,    4,    5,     4,     5,    4,    15,       15,   0,    0,    2,    4,    4,    4,    4,    5,     4,     5,    4,    15,           15,   2,    4,    5,    7,    7,    7,    9,    7,     5,     4,    2,    15,           15,   2,    4,    5,    7,    7,    7,    9,    7,     9,     7,    5,           9,     7,     5,    4,           7,     5,     4,    2,    15,         15,   0,    2,    4,   4,    4,    5,     4,     5,    4,    15,        2,     0,     2,    0,    15   };
-float dursNinoDelTambor[] = {0.75, 0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,     0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 1.25, 0.25,       0.75, 0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,      0.125, 0.125, 0.25, 1.25, 0.25};
+int notasNinoDelTambor[] =  {0,    2,    4,   4,    4,    5,     4,     5,    4,    SILENCE,  SILENCE,   0,    0,    2,    4,    4,    4,    4,    5,     4,     5,    4,    SILENCE,      SILENCE,   2,    4,    5,    7,    7,    7,    9,    7,     5,     4,    2,    SILENCE,      SILENCE,   2,    4,    5,    7,    7,    7,    9,    7,     9,     7,    5,           9,     7,     5,    4,           7,     5,     4,    2,    SILENCE,    SILENCE,   0,    2,    4,   4,    4,    5,     4,     5,    4,    SILENCE,   2,     0,     2,    0,    SILENCE};
+float dursNinoDelTambor[] = {0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,     0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 1.25, 0.25,       0.75, 0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,      0.125, 0.125, 0.25, 1.25, 0.25};
 
 struct Song {
   const int* notas;
@@ -48,12 +50,11 @@ Song songs[] = {
 
 int activeSong = 0;
 int noteIndex = 0;
+int currentChannel = -1;   // LED channel currently lit (-1 = none)
 unsigned long noteStartMs = 0;
-unsigned long offStartMs = 0;
-float dur = 0;       // LED on time for current note
-float legato = 0;    // LED off time for current note
+float dur = 0;             // full duration of the current note
 
-enum NoteState { NOTE_START, NOTE_ON, NOTE_OFF };
+enum NoteState { NOTE_START, NOTE_ON };
 NoteState noteState = NOTE_START;
 
 // Power-on intro (descending scale)
@@ -184,25 +185,23 @@ void updateLEDsequence() {
 
   switch (noteState) {
     case NOTE_START: {
-      Tlc.set(s->notas[noteIndex], 4080);
-      Tlc.update();
-      dur = tempo * s->durs[noteIndex] * 0.75;
-      legato = tempo * s->durs[noteIndex] * 0.25;
+      int ch = s->notas[noteIndex];
+      if (ch == SILENCE) {
+        if (currentChannel >= 0) { Tlc.set(currentChannel, 0); while (Tlc.update()); }
+        currentChannel = SILENCE;
+      } else if (ch != currentChannel) {
+        if (currentChannel >= 0) Tlc.set(currentChannel, 0);
+        currentChannel = ch;
+        Tlc.set(currentChannel, 4080);
+        while (Tlc.update());
+      }
+      dur = tempo * s->durs[noteIndex];
       noteStartMs = millis();
       noteState = NOTE_ON;
       break;
     }
     case NOTE_ON: {
       if ((unsigned long)(millis() - noteStartMs) >= (unsigned long)dur) {
-        Tlc.set(s->notas[noteIndex], 0);
-        Tlc.update();
-        offStartMs = millis();
-        noteState = NOTE_OFF;
-      }
-      break;
-    }
-    case NOTE_OFF: {
-      if ((unsigned long)(millis() - offStartMs) >= (unsigned long)legato) {
         noteIndex++;
         if (noteIndex >= s->len) noteIndex = 0;   // loop the song
         noteState = NOTE_START;
@@ -217,7 +216,7 @@ void runIntro() {
   if (millis() - introStartMs >= 250) {
     Tlc.set(introStep + 1, 0);
     Tlc.set(introStep, 4080);
-    Tlc.update();
+    while (Tlc.update());
     introStep--;
     introStartMs = millis();
     if (introStep < 0) {
@@ -237,5 +236,6 @@ void apagar() {
   for (int i = 0; i <= 15; i++) {
     Tlc.set(i, 0);
   }
-  Tlc.update();
+  while (Tlc.update());
+  currentChannel = -1;
 }
