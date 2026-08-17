@@ -104,6 +104,7 @@ void setup() {
 void loop() {
   handleButtons();
   updateLEDsequence();
+  Tlc.update();   // keep TLC5940 PWM refreshed every cycle
 }
 
 // ---------------------------------------------------------------------------
