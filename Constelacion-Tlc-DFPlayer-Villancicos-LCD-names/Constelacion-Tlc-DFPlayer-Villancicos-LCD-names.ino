@@ -42,11 +42,13 @@ struct Song {
   const int* notas;
   const float* durs;
   int len;
+  const char* nameLine1;   // LCD row 0
+  const char* nameLine2;   // LCD row 1 (empty string if unused)
 };
 
 Song songs[] = {
-  {notasNocheDePaz,    dursNocheDePaz,    sizeof(notasNocheDePaz)    / sizeof(int)},
-  {notasNinoDelTambor, dursNinoDelTambor, sizeof(notasNinoDelTambor) / sizeof(int)}
+  {notasNocheDePaz,    dursNocheDePaz,    sizeof(notasNocheDePaz)    / sizeof(int), "Noche de Paz", ""},
+  {notasNinoDelTambor, dursNinoDelTambor, sizeof(notasNinoDelTambor) / sizeof(int), "El Nino del",  "Tambor"}
 };
 
 // ---------------------------------------------------------------------------
@@ -98,15 +100,13 @@ void setup() {
     pinMode(i, INPUT_PULLUP);
   }
   lcd.begin(16, 2);
-  lcd.print("La Constelacion");
-  lcd.setCursor(0, 1);
-  lcd.print("Villancicos");
   Serial.begin(9600);
   DFPlayerSerial.begin(9600);
   myDFPlayer.begin(DFPlayerSerial);
   myDFPlayer.volume(30);   // De 0 a 30
   myDFPlayer.reset();
   runIntroBlocking();      // power-on descending scale before waiting for PLAY
+  showSongOnLCD(track);    // show the track that's cued up (track 0 at boot)
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +177,7 @@ void jumpToSong(int songIdx) {
   noteState = NOTE_START;
   introDone = true;   // skip the power-on scale when a track is selected
   stopped = false;
+  showSongOnLCD(songIdx);
 }
 
 // Turn all LEDs off and pause the sequence.
@@ -266,4 +267,12 @@ void apagar() {
   }
   while (Tlc.update());
   currentChannel = -1;
+}
+
+void showSongOnLCD(int songIdx) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(songs[songIdx].nameLine1);
+  lcd.setCursor(0, 1);
+  lcd.print(songs[songIdx].nameLine2);
 }
