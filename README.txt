@@ -2,12 +2,38 @@
 
 README  
 
+
+
+//////////////////////////////////////////////////////////////////////
+26 de agosto de 2026
+
+CÓDIGO ACTUAL
+Constelacion-Intro-LCD.ino
+
+While the intro is running (descendent scale) display "La Constelación". Then display current song
+
+Elementos sin cambios
+
+Cambios en Botones:
+
+if  the mp3 device is playing 
+
+button3 pressed goes to previous track and plays it
+button4 pressed goes to next track and plays it
+if  the mp3 is not playing
+
+button3 pressed goes to previous track but doesn´t play
+button4 pressed goes to next track but doesn´t play
+In any case the villancico name must be displayed in the LCD
+
+
+
 //////////////////////////////////////////////////////////////////////
 25 de agosto de 2026
 
 CÓDIGO ACTUAL
-
 Constelacion-Tlc-DFPlayer-Villancicos-LCD-names.ino
+
 Fix setup. Display villancico name in LCD
 Moved lcd.begin(16, 2); ot ouf the for() {} in thev setup() section to
 avoid unnecessary iterarions
