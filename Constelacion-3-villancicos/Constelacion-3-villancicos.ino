@@ -4,8 +4,8 @@ Combined sketch: TLC5940 LED villancico sequencer + DFPlayer Mini button control
    Buttons (INPUT_PULLUP):
      bot1 (pin 22) = STOP   -> reset DFPlayer, turn LEDs off and pause sequence
      bot2 (pin 23) = PLAY   -> play current track and jump LEDs to that song
-     bot3 (pin 24) = REWIND -> previous track + matching LED sequence
-     bot4 (pin 25) = FORWARD-> next track + matching LED sequence
+     bot3 (pin 24) = REWIND -> previous track. Plays it if already playing; otherwise just selects it.
+     bot4 (pin 25) = FORWARD-> next track. Plays it if already playing; otherwise just selects it.
 
    DFPlayer on SoftwareSerial(26, 27).  TLC5940 uses the standard Mega pins
    (9/10/11/12/50/51/52/53), no conflict with pins 22-27.
@@ -38,6 +38,25 @@ float dursNocheDePaz[] =   {0.375, 0.125, 0.25, 0.5, 0.25,     0.375, 0.125, 0.2
 int notasNinoDelTambor[] =  {0,    2,    4,   4,    4,    5,     4,     5,    4,    SILENCE,  SILENCE,   0,    0,    2,    4,    4,    4,    4,    5,     4,     5,    4,    SILENCE,      SILENCE,   2,    4,    5,    7,    7,    7,    9,    7,     5,     4,    2,    SILENCE,      SILENCE,   2,    4,    5,    7,    7,    7,    9,    7,     9,     7,    5,           9,     7,     5,    4,           7,     5,     4,    2,    SILENCE,    SILENCE,   0,    2,    4,   4,    4,    5,     4,     5,    4,    SILENCE,   2,     0,     2,    0,    SILENCE};
 float dursNinoDelTambor[] = {0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,     0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 1.25, 0.25,       0.75, 0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,      0.125, 0.125, 0.25, 1.25, 0.25};
 
+// index:     0    10    20    30    40    50
+int notasJoyToTheWorld[] = {
+  0, 11, 9, 7, 5, 4, 2, 0, 7, 9,
+  9, 11, 11, 0, 0, 0, 11, 9, 7, 7,
+  5, 4, 0, 0, 11, 9, 7, 7, 5, 4,
+  4, 4, 4, 4, 4, 5, 7, 5, 4, 2,
+  2, 2, 2, 4, 5, 4, 2, 0, 0, 9,
+  7, 5, 4, 5, 4, 2, 0
+};
+
+// index:     0    10    20    30    40    50
+float dursJoyToTheWorld[] = {
+  0.25, 0.1875, 0.0625, 0.375, 0.125, 0.25, 0.25, 0.375, 0.125, 0.375,
+  0.125, 0.375, 0.125, 0.375, 0.125, 0.125, 0.125, 0.125, 0.125, 0.1875,
+  0.0625, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.1875, 0.0625, 0.125,
+  0.125, 0.125, 0.125, 0.125, 0.0625, 0.0625, 0.375, 0.0625, 0.0625, 0.125,
+  0.125, 0.125, 0.0625, 0.0625, 0.375, 0.0625, 0.0625, 0.125, 0.25, 0.125,
+  0.1875, 0.0625, 0.125, 0.125, 0.25, 0.25, 0.5
+};
 
 struct Song {
   const int* notas;
@@ -48,8 +67,9 @@ struct Song {
 };
 
 Song songs[] = {
-  {notasNocheDePaz,    dursNocheDePaz,    sizeof(notasNocheDePaz)    / sizeof(int), "Noche de Paz", ""},
-  {notasNinoDelTambor, dursNinoDelTambor, sizeof(notasNinoDelTambor) / sizeof(int), "El Nino del",  "Tambor"}
+  {notasNocheDePaz,    dursNocheDePaz,    sizeof(notasNocheDePaz)    / sizeof(int), "Noche de Paz",  ""},
+  {notasNinoDelTambor, dursNinoDelTambor, sizeof(notasNinoDelTambor) / sizeof(int), "El Nino del",   "Tambor"},
+  {notasJoyToTheWorld, dursJoyToTheWorld, sizeof(notasJoyToTheWorld) / sizeof(int), "Joy to the",    "World"}
 };
 
 // ---------------------------------------------------------------------------
@@ -83,7 +103,7 @@ int botAnt3 = 0;
 int botAnt4 = 0;
 
 int track = 0;
-int noTracks = 2;
+int noTracks = 3;
 int trackMasUno = 1;
 unsigned long lastDebounceMs = 0;
 const unsigned long debounceDelay = 50;
@@ -147,7 +167,7 @@ void handleButtons() {
       jumpToSong(track);
     }
   }
-    if (bot3 != botAnt3) {
+  if (bot3 != botAnt3) {
     if (bot3 == 1) {
       track = abs(track - 1) % noTracks;
       trackMasUno = track + 1;
@@ -178,12 +198,6 @@ void handleButtons() {
   botAnt2 = bot2;
   botAnt3 = bot3;
   botAnt4 = bot4;
-}
-
-void showIntroOnLCD() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("La Constelacion");
 }
 
 // Start playing the given song from the beginning (LED side).
@@ -289,6 +303,12 @@ void apagar() {
   }
   while (Tlc.update());
   currentChannel = -1;
+}
+
+void showIntroOnLCD() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("La Constelacion");
 }
 
 void showSongOnLCD(int songIdx) {

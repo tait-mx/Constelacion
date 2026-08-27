@@ -4,8 +4,8 @@ Combined sketch: TLC5940 LED villancico sequencer + DFPlayer Mini button control
    Buttons (INPUT_PULLUP):
      bot1 (pin 22) = STOP   -> reset DFPlayer, turn LEDs off and pause sequence
      bot2 (pin 23) = PLAY   -> play current track and jump LEDs to that song
-     bot3 (pin 24) = REWIND -> previous track + matching LED sequence
-     bot4 (pin 25) = FORWARD-> next track + matching LED sequence
+     bot3 (pin 24) = REWIND -> previous track. Plays it if already playing; otherwise just selects it.
+     bot4 (pin 25) = FORWARD-> next track. Plays it if already playing; otherwise just selects it.
 
    DFPlayer on SoftwareSerial(26, 27).  TLC5940 uses the standard Mega pins
    (9/10/11/12/50/51/52/53), no conflict with pins 22-27.
@@ -21,6 +21,9 @@ Combined sketch: TLC5940 LED villancico sequencer + DFPlayer Mini button control
 
 const int rs = 7, en = 6, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+// Gap between notes
+ 
 
 
 // ---------------------------------------------------------------------------
@@ -38,6 +41,25 @@ float dursNocheDePaz[] =   {0.375, 0.125, 0.25, 0.5, 0.25,     0.375, 0.125, 0.2
 int notasNinoDelTambor[] =  {0,    2,    4,   4,    4,    5,     4,     5,    4,    SILENCE,  SILENCE,   0,    0,    2,    4,    4,    4,    4,    5,     4,     5,    4,    SILENCE,      SILENCE,   2,    4,    5,    7,    7,    7,    9,    7,     5,     4,    2,    SILENCE,      SILENCE,   2,    4,    5,    7,    7,    7,    9,    7,     9,     7,    5,           9,     7,     5,    4,           7,     5,     4,    2,    SILENCE,    SILENCE,   0,    2,    4,   4,    4,    5,     4,     5,    4,    SILENCE,   2,     0,     2,    0,    SILENCE};
 float dursNinoDelTambor[] = {0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,     0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 0.5,         0.125, 0.125, 0.25, 1.25, 0.25,       0.75, 0.75, 0.25, 0.5, 0.25, 0.25, 0.125, 0.125, 0.25, 1.25, 0.25,      0.125, 0.125, 0.25, 1.25, 0.25};
 
+// index:     0    10    20    30    40    50
+int notasJoyToTheWorld[] = {
+  0, 11, 9, 7, 5, 4, 2, 0, 7, 9,
+  9, 11, 11, 0, 0, 0, 11, 9, 7, 7,
+  5, 4, 0, 0, 11, 9, 7, 7, 5, 4,
+  4, 4, 4, 4, 4, 5, 7, 5, 4, 2,
+  2, 2, 2, 4, 5, 4, 2, 0, 0, 9,
+  7, 5, 4, 5, 4, 2, 0
+};
+
+// index:     0    10    20    30    40    50
+float dursJoyToTheWorld[] = {
+  0.25, 0.1875, 0.0625, 0.375, 0.125, 0.25, 0.25, 0.375, 0.125, 0.375,
+  0.125, 0.375, 0.125, 0.375, 0.125, 0.125, 0.125, 0.125, 0.125, 0.1875,
+  0.0625, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.1875, 0.0625, 0.125,
+  0.125, 0.125, 0.125, 0.125, 0.0625, 0.0625, 0.375, 0.0625, 0.0625, 0.125,
+  0.125, 0.125, 0.0625, 0.0625, 0.375, 0.0625, 0.0625, 0.125, 0.25, 0.125,
+  0.1875, 0.0625, 0.125, 0.125, 0.25, 0.25, 0.5
+};
 
 struct Song {
   const int* notas;
@@ -48,8 +70,9 @@ struct Song {
 };
 
 Song songs[] = {
-  {notasNocheDePaz,    dursNocheDePaz,    sizeof(notasNocheDePaz)    / sizeof(int), "Noche de Paz", ""},
-  {notasNinoDelTambor, dursNinoDelTambor, sizeof(notasNinoDelTambor) / sizeof(int), "El Nino del",  "Tambor"}
+  {notasNocheDePaz,    dursNocheDePaz,    sizeof(notasNocheDePaz)    / sizeof(int), "Noche de Paz",  ""},
+  {notasNinoDelTambor, dursNinoDelTambor, sizeof(notasNinoDelTambor) / sizeof(int), "El Nino del",   "Tambor"},
+  {notasJoyToTheWorld, dursJoyToTheWorld, sizeof(notasJoyToTheWorld) / sizeof(int), "Joy to the",    "World"}
 };
 
 // ---------------------------------------------------------------------------
@@ -62,8 +85,12 @@ int currentChannel = -1;   // LED channel currently lit (-1 = none)
 unsigned long noteStartMs = 0;
 float dur = 0;             // full duration of the current note
 
-enum NoteState { NOTE_START, NOTE_ON };
+enum NoteState { NOTE_START, NOTE_ON, NOTE_GAP };
 NoteState noteState = NOTE_START;
+
+const unsigned long NOTE_GAP_MS = 60;   // LED-off blip when a note repeats, to show the re-attack
+unsigned long gapStartMs = 0;
+unsigned long gapMs = 0;  
 
 // Power-on intro (descending scale)
 bool introDone = false;
@@ -83,7 +110,7 @@ int botAnt3 = 0;
 int botAnt4 = 0;
 
 int track = 0;
-int noTracks = 2;
+int noTracks = 3;
 int trackMasUno = 1;
 unsigned long lastDebounceMs = 0;
 const unsigned long debounceDelay = 50;
@@ -147,7 +174,7 @@ void handleButtons() {
       jumpToSong(track);
     }
   }
-    if (bot3 != botAnt3) {
+  if (bot3 != botAnt3) {
     if (bot3 == 1) {
       track = abs(track - 1) % noTracks;
       trackMasUno = track + 1;
@@ -178,12 +205,6 @@ void handleButtons() {
   botAnt2 = bot2;
   botAnt3 = bot3;
   botAnt4 = bot4;
-}
-
-void showIntroOnLCD() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("La Constelacion");
 }
 
 // Start playing the given song from the beginning (LED side).
@@ -225,18 +246,36 @@ void updateLEDsequence() {
   switch (noteState) {
     case NOTE_START: {
       int ch = s->notas[noteIndex];
+      dur = tempo * s->durs[noteIndex];
+      noteStartMs = millis();
+
       if (ch == SILENCE) {
         if (currentChannel >= 0) { Tlc.set(currentChannel, 0); while (Tlc.update()); }
         currentChannel = SILENCE;
-      } else if (ch != currentChannel) {
+        noteState = NOTE_ON;
+      } else if (ch == currentChannel) {
+        // Repeated note: brief LED-off blip so the re-attack is visible,
+        // total note duration (dur) is unchanged.
+        Tlc.set(currentChannel, 0);
+        while (Tlc.update());
+        gapMs = min((unsigned long)NOTE_GAP_MS, (unsigned long)(dur * 0.4));
+        gapStartMs = millis();
+        noteState = NOTE_GAP;
+      } else {
         if (currentChannel >= 0) Tlc.set(currentChannel, 0);
         currentChannel = ch;
         Tlc.set(currentChannel, 4080);
         while (Tlc.update());
+        noteState = NOTE_ON;
       }
-      dur = tempo * s->durs[noteIndex];
-      noteStartMs = millis();
-      noteState = NOTE_ON;
+      break;
+    }
+    case NOTE_GAP: {
+      if ((unsigned long)(millis() - gapStartMs) >= gapMs) {
+        Tlc.set(currentChannel, 4080);
+        while (Tlc.update());
+        noteState = NOTE_ON;
+      }
       break;
     }
     case NOTE_ON: {
@@ -289,6 +328,12 @@ void apagar() {
   }
   while (Tlc.update());
   currentChannel = -1;
+}
+
+void showIntroOnLCD() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("La Constelacion");
 }
 
 void showSongOnLCD(int songIdx) {

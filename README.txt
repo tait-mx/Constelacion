@@ -8,6 +8,25 @@ README
 26 de agosto de 2026
 
 CÓDIGO ACTUAL
+Constelacion-3-villancicos-gap.ino
+
+ADD a gap between notes so when a note is repeated the led turns off for a small amount of time so we can see the repetition of two notes and not just as a long one. Beware not to change the duration of the note event. It will be like a change in the legato between notes
+
+
+
+CÓDIGO ANTERIOR
+Constelacion-3-villancicos.ino
+
+Se agregó Joy to the World como tercer 
+
+
+
+
+
+
+
+
+CÓDIGO ANTERIOR
 Constelacion-Intro-LCD.ino
 
 While the intro is running (descendent scale) display "La Constelación". Then display current song
