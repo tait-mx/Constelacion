@@ -112,7 +112,7 @@ void conectarTCP() {
   Serial.print(host);
   Serial.print(":");
   Serial.println(port);
-  
+
   // Liberar el socket huérfano antes de abrir uno nuevo
   client.stop();
 

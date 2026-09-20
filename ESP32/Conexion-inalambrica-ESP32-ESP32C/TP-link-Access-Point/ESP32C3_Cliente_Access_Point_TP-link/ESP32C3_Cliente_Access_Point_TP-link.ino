@@ -1,9 +1,9 @@
 #include <WiFi.h>
 
 // Configuración de Red (Asegúrate de coincidir exactamente con el Maestro)
-const char* ssid     = "ESP32_Red"; 
-const char* password = "12345678";      // Cambia por el password real si el Maestro tiene uno
-const char* host     = "192.168.4.1";
+const char* ssid     = "constelacion"; 
+const char* password = "01Constelacion01";      // Cambia por el password real si el Maestro tiene uno
+const char* host     = "192.168.0.150";
 const uint16_t port  = 8080;
 
 // Configuración de Hardware ESP32-C3 SuperMini
