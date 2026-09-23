@@ -5,11 +5,20 @@
   comandos "ON" y "OFF" a los ESP32-C3 conectados, siguiendo una
   secuencia programable (array de pasos: cliente + duración en fracción de beat).
 
+  LED de latencia (maestro):
+  Cada vez que se envía el comando "ON" a un cliente, el LED local del
+  maestro (pin 2) se enciende al mismo tiempo, para poder ver a simple
+  vista el retraso entre el encendido del maestro y el del cliente.
+  El LED del maestro se apaga automáticamente tras la MITAD de la
+  duración que se le mandó al cliente para ese paso (no espera a que
+  el cliente reciba su "OFF").
+
   Cómo probarlo:
   1. Sube este sketch al ESP32 clásico.
   2. Sube el sketch cliente a cada ESP32-C3, apuntando al SSID del router
      y a la IP fija 192.168.0.150.
-  3. Los LEDs de los C3 deberían encenderse uno por uno siguiendo la secuencia.
+  3. Los LEDs de los C3 deberían encenderse uno por uno siguiendo la secuencia,
+     y el LED del maestro debería parpadear brevemente al inicio de cada uno.
 */
 
 #include <WiFi.h>
@@ -28,6 +37,34 @@ const int MAX_CLIENTES = 4;
 
 WiFiServer servidor(puerto);
 WiFiClient clientes[MAX_CLIENTES];
+
+// ---------------------------------------------------------------
+// LED DE LATENCIA (MAESTRO)
+// ---------------------------------------------------------------
+
+// ESP32 clásico: usar literal 2, no LED_BUILTIN (ver hardware-notes)
+const int PIN_LED_MAESTRO = 2;
+
+bool masterLedIsOn = false;
+unsigned long masterLedStartTime = 0;
+unsigned long masterLedDuration = 0;
+
+// Enciende el LED del maestro por la mitad de la duración indicada
+// para el paso actual (no bloqueante).
+void encenderLedMaestro(unsigned long duracionClienteMs) {
+  digitalWrite(PIN_LED_MAESTRO, HIGH);
+  masterLedIsOn = true;
+  masterLedStartTime = millis();
+  masterLedDuration = duracionClienteMs / 2;
+}
+
+// Revisa en cada vuelta del loop si ya toca apagar el LED del maestro.
+void actualizarLedMaestro() {
+  if (masterLedIsOn && (millis() - masterLedStartTime >= masterLedDuration)) {
+    digitalWrite(PIN_LED_MAESTRO, LOW);
+    masterLedIsOn = false;
+  }
+}
 
 // ---------------------------------------------------------------
 // SECUENCIA
@@ -94,6 +131,9 @@ void actualizarSecuencia() {
     enviarComando(sequence1[currentStep].clientNumber, "ON");
     stepLedIsOn = true;
     stepStartTime = ahora;
+
+    // Enciende también el LED local del maestro (medio tiempo del cliente)
+    encenderLedMaestro(sequence1[currentStep].durationMs);
     return;
   }
 
@@ -113,7 +153,10 @@ void actualizarSecuencia() {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  
+
+  pinMode(PIN_LED_MAESTRO, OUTPUT);
+  digitalWrite(PIN_LED_MAESTRO, LOW);
+
   convertirSecuencia();
 
   WiFi.mode(WIFI_STA);
@@ -161,4 +204,7 @@ void loop() {
 
   // 2. Avanzar la secuencia programada
   actualizarSecuencia();
+
+  // 3. Apagar el LED de latencia del maestro cuando corresponda
+  actualizarLedMaestro();
 }
