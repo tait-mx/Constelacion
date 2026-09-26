@@ -33,7 +33,7 @@ IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 // Cantidad máxima de clientes ESP32-C3 que puede atender simultáneamente
-const int MAX_CLIENTES = 4;
+const int MAX_CLIENTES = 8;
 
 WiFiServer servidor(puerto);
 WiFiClient clientes[MAX_CLIENTES];
@@ -166,7 +166,11 @@ StepFraction sequence1Raw[] = {
   {0, 1, 4},
   {1, 1, 4},
   {2, 1, 4},
-  {3, 5, 4}
+  {3, 1, 4},
+  {4, 1, 4},
+  {5, 1, 4},
+  {6, 1, 4},
+  {7, 1, 4}
 };
 const uint8_t sequenceLength = sizeof(sequence1Raw) / sizeof(sequence1Raw[0]);
 
