@@ -172,6 +172,13 @@ void actualizarLedMaestro() {
 // Una nota entera (1/1) equivale a 4 negras.
 #define MS_PER_WHOLE_NOTE (240000.0 / BPM)  // a 60bpm, 1/4 (negra) = 1000ms
 
+// Duración fija del "aire" non-legato entre notas: una fusa (1/32 de nota
+// entera), independientemente de la duración de la nota que se esté tocando.
+// El LED se apaga esa cantidad de tiempo antes de que termine el paso; el
+// paso en sí sigue durando lo mismo, así que el tempo/timing global no cambia.
+#define NON_LEGATO_GAP_FRACTION (1.0 / 32.0)
+#define NON_LEGATO_GAP_MS ((unsigned long)(NON_LEGATO_GAP_FRACTION * MS_PER_WHOLE_NOTE))
+
 // Formato de entrada: {clientNumber, numerador, denominador}
 // clientNumber: 0 a 7 (índice en el array `clientes`, mapeado a la nota
 // do-re-mi-fa-sol-la-si-do), o SILENCE para un silencio
@@ -256,6 +263,7 @@ void convertirSecuencia() {
 uint8_t currentStep = 0;
 unsigned long stepStartTime = 0;
 bool stepEnCurso = false;
+bool notaSeparada = false;  // true una vez que ya se mandó el OFF anticipado (gate)
 
 void enviarComando(uint8_t clientIndex, const char* comando) {
   if (clientIndex >= MAX_CLIENTES) return;  // cubre también SILENCE (255)
@@ -271,6 +279,7 @@ void enviarComando(uint8_t clientIndex, const char* comando) {
 void actualizarSecuencia() {
   unsigned long ahora = millis();
   bool esSilencio = (sequence1[currentStep].clientNumber == SILENCE);
+  unsigned long duracionTotal = sequence1[currentStep].durationMs;
 
   if (!stepEnCurso) {
     // Inicia el paso actual.
@@ -281,17 +290,34 @@ void actualizarSecuencia() {
       enviarComando(sequence1[currentStep].clientNumber, "ON");
       // Enciende también el LED local del maestro (medio tiempo del cliente).
       // Durante un silencio no se enciende ningún LED, ni siquiera el del maestro.
-      encenderLedMaestro(sequence1[currentStep].durationMs);
+      encenderLedMaestro(duracionTotal);
     }
 
     stepEnCurso = true;
+    notaSeparada = false;
     stepStartTime = ahora;
     return;
   }
 
-  // Ya está en curso (nota sonando o silencio corriendo): revisa si terminó su duración
-  if (ahora - stepStartTime >= sequence1[currentStep].durationMs) {
-    if (!esSilencio) {
+  unsigned long transcurrido = ahora - stepStartTime;
+  // El LED se apaga NON_LEGATO_GAP_MS antes del final del paso, sin importar
+  // cuánto dure la nota. Si la nota es más corta que ese hueco (no debería
+  // pasar con las duraciones usadas aquí), se recorta a 0 para no invertir el signo.
+  unsigned long duracionSonando = (duracionTotal > NON_LEGATO_GAP_MS) ? (duracionTotal - NON_LEGATO_GAP_MS) : 0;
+
+  // Corta el LED antes de que termine el paso (separación fija non-legato),
+  // dejando un pequeño hueco de silencio entre esta nota y la siguiente. El
+  // paso como tal sigue durando lo mismo, así que el tempo/timing global no
+  // se altera.
+  if (!esSilencio && !notaSeparada && transcurrido >= duracionSonando) {
+    enviarComando(sequence1[currentStep].clientNumber, "OFF");
+    notaSeparada = true;
+  }
+
+  // Ya se cumplió la duración total del paso: avanza al siguiente
+  if (transcurrido >= duracionTotal) {
+    if (!esSilencio && !notaSeparada) {
+      // Respaldo por si la duración del paso es menor o igual al hueco de non-legato
       enviarComando(sequence1[currentStep].clientNumber, "OFF");
     }
     stepEnCurso = false;
