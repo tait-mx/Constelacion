@@ -5,20 +5,35 @@
   comandos "ON" y "OFF" a los ESP32-C3 conectados, siguiendo una
   secuencia programable (array de pasos: cliente + duración en fracción de beat).
 
+  Secuencia: "Noche de Paz"
+  Mapeo de notas a índice de cliente:
+    0 = do
+    1 = re
+    2 = mi
+    3 = fa
+    4 = sol
+    5 = la
+    6 = si
+    7 = do (una octava arriba)
+  SILENCE = paso de silencio: durante su duración, NINGÚN cliente
+  recibe la señal de encendido (ni tampoco parpadea el LED del maestro).
+
   LED de latencia (maestro):
   Cada vez que se envía el comando "ON" a un cliente, el LED local del
   maestro (pin 2) se enciende al mismo tiempo, para poder ver a simple
   vista el retraso entre el encendido del maestro y el del cliente.
   El LED del maestro se apaga automáticamente tras la MITAD de la
   duración que se le mandó al cliente para ese paso (no espera a que
-  el cliente reciba su "OFF").
+  el cliente reciba su "OFF"). En los pasos de SILENCE, el LED del
+  maestro simplemente no se enciende.
 
   Cómo probarlo:
   1. Sube este sketch al ESP32 clásico.
   2. Sube el sketch cliente a cada ESP32-C3, apuntando al SSID del router
      y a la IP fija 192.168.0.150.
   3. Los LEDs de los C3 deberían encenderse uno por uno siguiendo la secuencia,
-     y el LED del maestro debería parpadear brevemente al inicio de cada uno.
+     respetando los silencios, y el LED del maestro debería parpadear
+     brevemente al inicio de cada nota (pero no durante los silencios).
 */
 
 #include <WiFi.h>
@@ -148,31 +163,79 @@ void actualizarLedMaestro() {
 // SECUENCIA
 // ---------------------------------------------------------------
 
+// Valor centinela para un paso de silencio: ningún cliente real usa
+// este índice (MAX_CLIENTES es 8, así que 255 nunca colisiona).
+#define SILENCE 255
+
 #define BPM 120
 // Notación musical estándar: BPM define la duración de la NEGRA (1/4).
 // Una nota entera (1/1) equivale a 4 negras.
 #define MS_PER_WHOLE_NOTE (240000.0 / BPM)  // a 60bpm, 1/4 (negra) = 1000ms
 
 // Formato de entrada: {clientNumber, numerador, denominador}
-// clientNumber: 0 a 3 (índice en el array `clientes`)
+// clientNumber: 0 a 7 (índice en el array `clientes`, mapeado a la nota
+// do-re-mi-fa-sol-la-si-do), o SILENCE para un silencio
 // numerador/denominador: fracción de beat, ej. {1,4} = 1/4 de beat
 struct StepFraction {
   uint8_t clientNumber;
   uint8_t numerator;
   uint8_t denominator;
 };
-
-StepFraction sequence1Raw[] = {
-  {0, 1, 4},
-  {1, 1, 4},
-  {2, 1, 4},
-  {3, 1, 4},
+StepFraction nocheDePaz[] = {
+  {4, 3, 8}, // 7 -> 4, 0.375 -> 3/8
+  {5, 1, 8}, // 9 -> 5, 0.125 -> 1/8
+  {4, 1, 4}, // 7 -> 4, 0.25 -> 1/4
+  {2, 2, 4}, // 4 -> 2, 0.5 -> 2/4
+  {SILENCE, 1, 4}, // SILENCE -> SILENCE, 0.25 -> 1/4
+  {4, 3, 8},
+  {5, 1, 8},
   {4, 1, 4},
-  {5, 1, 4},
-  {6, 1, 4},
-  {7, 1, 4}
+  {2, 2, 4},
+  {SILENCE, 1, 4},
+  {1, 2, 4}, // 2 -> 1, 0.5 -> 2/4
+  {1, 1, 4}, // 2 -> 1, 0.25 -> 1/4
+  {6, 2, 4}, // 11 -> 6, 0.5 -> 2/4
+  {6, 1, 4}, // 11 -> 6, 0.25 -> 1/4
+  {7, 2, 4}, // 12 -> 7, 0.5 -> 2/4
+  {7, 1, 4}, // 12 -> 7, 0.25 -> 1/4
+  {4, 3, 4}, // 7 -> 4, 0.75 -> 3/4
+  {5, 2, 4}, // 9 -> 5, 0.5 -> 2/4
+  {5, 1, 4}, // 9 -> 5, 0.25 -> 1/4
+  {7, 3, 8}, // 12 -> 7, 0.375 -> 3/8
+  {6, 1, 8}, // 11 -> 6, 0.125 -> 1/8
+  {5, 1, 4}, // 9 -> 5, 0.25 -> 1/4
+  {4, 3, 8}, // 7 -> 4, 0.375 -> 3/8
+  {5, 1, 8}, // 9 -> 5, 0.125 -> 1/8
+  {4, 1, 4}, // 7 -> 4, 0.25 -> 1/4
+  {2, 2, 4}, // 4 -> 2, 0.5 -> 2/4
+  {SILENCE, 1, 4},
+  {5, 2, 4}, // 9 -> 5, 0.5 -> 2/4
+  {5, 1, 4}, // 9 -> 5, 0.25 -> 1/4
+  {7, 3, 8}, // 12 -> 7, 0.375 -> 3/8
+  {6, 1, 8}, // 11 -> 6, 0.125 -> 1/8
+  {5, 1, 4}, // 9 -> 5, 0.25 -> 1/4
+  {4, 3, 8}, // 7 -> 4, 0.375 -> 3/8
+  {5, 1, 8}, // 9 -> 5, 0.125 -> 1/8
+  {4, 1, 4}, // 7 -> 4, 0.25 -> 1/4
+  {2, 2, 4}, // 4 -> 2, 0.5 -> 2/4
+  {SILENCE, 1, 4},
+  {1, 2, 4}, // 2 -> 1, 0.5 -> 2/4
+  {1, 1, 4}, // 2 -> 1, 0.25 -> 1/4
+  {3, 3, 8}, // 5 -> 3, 0.375 -> 3/8
+  {1, 1, 8}, // 2 -> 1, 0.125 -> 1/8
+  {6, 1, 4}, // 11 -> 6, 0.25 -> 1/4
+  {0, 3, 4}, // 0 -> 0, 0.75 -> 3/4
+  {2, 2, 4}, // 4 -> 2, 0.5 -> 2/4
+  {7, 3, 8}, // 12 -> 7, 0.375 -> 3/8
+  {4, 1, 8}, // 7 -> 4, 0.125 -> 1/8
+  {2, 1, 4}, // 4 -> 2, 0.25 -> 1/4
+  {4, 3, 8}, // 7 -> 4, 0.375 -> 3/8
+  {3, 1, 8}, // 5 -> 3, 0.125 -> 1/8
+  {1, 1, 4}, // 2 -> 1, 0.25 -> 1/4
+  {0, 3, 4}, // 0 -> 0, 0.75 -> 3/4
+  {SILENCE, 3, 4} // SILENCE -> SILENCE, 0.75 -> 3/4
 };
-const uint8_t sequenceLength = sizeof(sequence1Raw) / sizeof(sequence1Raw[0]);
+const uint8_t sequenceLength = sizeof(nocheDePaz) / sizeof(nocheDePaz[0]);
 
 // Secuencia ya convertida a milisegundos (se llena en setup())
 struct Step {
@@ -184,18 +247,18 @@ Step sequence1[sequenceLength];
 
 void convertirSecuencia() {
   for (int i = 0; i < sequenceLength; i++) {
-    sequence1[i].clientNumber = sequence1Raw[i].clientNumber;
-    float fraccion = (float)sequence1Raw[i].numerator / (float)sequence1Raw[i].denominator;
+    sequence1[i].clientNumber = nocheDePaz[i].clientNumber;
+    float fraccion = (float)nocheDePaz[i].numerator / (float)nocheDePaz[i].denominator;
     sequence1[i].durationMs = (unsigned long)(fraccion * MS_PER_WHOLE_NOTE);
   }
 }
 
 uint8_t currentStep = 0;
 unsigned long stepStartTime = 0;
-bool stepLedIsOn = false;
+bool stepEnCurso = false;
 
 void enviarComando(uint8_t clientIndex, const char* comando) {
-  if (clientIndex >= MAX_CLIENTES) return;
+  if (clientIndex >= MAX_CLIENTES) return;  // cubre también SILENCE (255)
   if (clientes[clientIndex] && clientes[clientIndex].connected()) {
     clientes[clientIndex].println(comando);
     Serial.print("[Enviado: ");
@@ -207,28 +270,35 @@ void enviarComando(uint8_t clientIndex, const char* comando) {
 
 void actualizarSecuencia() {
   unsigned long ahora = millis();
+  bool esSilencio = (sequence1[currentStep].clientNumber == SILENCE);
 
-  if (!stepLedIsOn) {
-    // Inicia el paso actual: enciende el LED del cliente correspondiente
-    enviarComando(sequence1[currentStep].clientNumber, "ON");
-    stepLedIsOn = true;
+  if (!stepEnCurso) {
+    // Inicia el paso actual.
+    if (esSilencio) {
+      Serial.println("[Silencio]");
+    } else {
+      // Enciende el LED del cliente correspondiente a la nota
+      enviarComando(sequence1[currentStep].clientNumber, "ON");
+      // Enciende también el LED local del maestro (medio tiempo del cliente).
+      // Durante un silencio no se enciende ningún LED, ni siquiera el del maestro.
+      encenderLedMaestro(sequence1[currentStep].durationMs);
+    }
+
+    stepEnCurso = true;
     stepStartTime = ahora;
-
-    // Enciende también el LED local del maestro (medio tiempo del cliente)
-    encenderLedMaestro(sequence1[currentStep].durationMs);
     return;
   }
 
-  // Ya está encendido: revisa si terminó su duración
+  // Ya está en curso (nota sonando o silencio corriendo): revisa si terminó su duración
   if (ahora - stepStartTime >= sequence1[currentStep].durationMs) {
-    enviarComando(sequence1[currentStep].clientNumber, "OFF");
-    stepLedIsOn = false;
+    if (!esSilencio) {
+      enviarComando(sequence1[currentStep].clientNumber, "OFF");
+    }
+    stepEnCurso = false;
     currentStep = (currentStep + 1) % sequenceLength;
     // El siguiente paso se inicia en la próxima llamada a actualizarSecuencia()
   }
 }
-
-
 
 // ---------------------------------------------------------------
 
