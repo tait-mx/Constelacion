@@ -1,7 +1,15 @@
 /*
   ESP32 (DevKit clásico) - MAESTRO "Constelación"
   Cliente del router + LEDs remotos (multi-cliente ESP32-C3)
-  + DFPlayer Mini (audio) + 4 BOTONES FÍSICOS + LCD 16x2 I2C
+  + DFPlayer Mini (audio) + 5 BOTONES FÍSICOS + LCD 16x2 I2C
+  -------------------------------------------------------------------
+  MODOS (botón MODE, GPIO25, a GND con pull-up interno):
+    - PERFORM MODE (por defecto): funcionamiento normal descrito abajo.
+        LCD: "PERFORM MODE" / nombre del villancico seleccionado.
+    - TEST MODE: PREV/NEXT eligen el LED (0 a 7, circular) y PLAY lo
+        mantiene encendido mientras se presiona.
+        LCD: "TEST MODE" / "LED n".
+    Al cambiar de modo se detienen audio, secuencia y LEDs.
   -------------------------------------------------------------------
   Villancicos: "Noche de Paz" (0001.mp3), "El Niño del Tambor" (0002.mp3) y
   "Joy to the World" (0003.mp3). En todo momento hay un "villancico en turno"
@@ -62,9 +70,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 #define BTN_PLAY_PIN  12  // Play
 #define BTN_PREV_PIN  14  // Retroceder al villancico anterior
 #define BTN_NEXT_PIN  13  // Avanzar al villancico siguiente
-
-#define BTN_LED_PIN    25  // Push button -> enciende LED del cliente 4 mientras se mantiene
-#define CLIENTE_BOTON  4   // Cliente cuyo LED controla este botón
+#define BTN_MODE_PIN  25  // MODE: alterna entre TEST MODE y PERFORM MODE
 
 // Pines para UART2 (DFPlayer)
 #define RX2_PIN 16  // Conectar al TX del DFPlayer
@@ -74,7 +80,7 @@ ezButton btnReset(BTN_RESET_PIN);
 ezButton btnPlay(BTN_PLAY_PIN);
 ezButton btnPrev(BTN_PREV_PIN);
 ezButton btnNext(BTN_NEXT_PIN);
-ezButton btnLed(BTN_LED_PIN);
+ezButton btnMode(BTN_MODE_PIN);
 
 HardwareSerial DFPlayerSerial(2); // UART2 nativo del ESP32
 DFRobotDFPlayerMini myDFPlayer;
@@ -85,6 +91,18 @@ uint8_t currentVillancico = 0;
 
 // true mientras la pista + la secuencia de LEDs del villancico en turno están activas.
 bool isPlaying = false;
+
+// ---------------------------------------------------------------
+// MODOS DE OPERACIÓN (botón MODE, GPIO25)
+// ---------------------------------------------------------------
+//  PERFORM MODE: comportamiento normal (villancicos + audio + secuencia).
+//  TEST MODE: PREV/NEXT eligen el LED (0 a MAX_CLIENTES-1) y PLAY lo
+//             mantiene encendido mientras se presiona.
+enum Modo { MODO_PERFORM, MODO_TEST };
+Modo modo = MODO_PERFORM;
+
+uint8_t ledSeleccionado = 0;   // LED elegido en TEST MODE
+int8_t ledEncendidoTest = -1;  // LED encendido por PLAY en TEST MODE (-1 = ninguno)
 
 // ---------------------------------------------------------------
 // IDENTIFICACIÓN DE CLIENTES POR ÍNDICE FIJO
@@ -542,11 +560,19 @@ void lcdImprimirFila(uint8_t fila, const char* texto) {
   lcd.print(buf);
 }
 
-// Muestra solo el nombre del villancico seleccionado (sin importar si está
-// en Play o Stop). Llamar al arrancar y al cambiar con Siguiente/Anterior.
+// TEST MODE:    "TEST MODE" / "LED n"
+// PERFORM MODE: "PERFORM MODE" / nombre del villancico seleccionado
+// Llamar al arrancar, al cambiar de modo y al cambiar la selección.
 void actualizarLCD() {
-  lcdImprimirFila(0, nombres[currentVillancico]);
-  lcdImprimirFila(1, "");
+  if (modo == MODO_TEST) {
+    char buf[17];
+    snprintf(buf, sizeof(buf), "LED %u", ledSeleccionado);
+    lcdImprimirFila(0, "TEST MODE");
+    lcdImprimirFila(1, buf);
+  } else {
+    lcdImprimirFila(0, "PERFORM MODE");
+    lcdImprimirFila(1, nombres[currentVillancico]);
+  }
 }
 
 // ---------------------------------------------------------------
@@ -665,7 +691,7 @@ void setup() {
   btnPlay.setDebounceTime(50);
   btnPrev.setDebounceTime(50);
   btnNext.setDebounceTime(50);
-  btnLed.setDebounceTime(30);
+  btnMode.setDebounceTime(50);
 
   // --- DFPlayer Mini por UART2 ---
   DFPlayerSerial.begin(9600, SERIAL_8N1, RX2_PIN, TX2_PIN);
@@ -718,7 +744,58 @@ void loop() {
   btnPlay.loop();
   btnPrev.loop();
   btnNext.loop();
-  btnLed.loop();
+  btnMode.loop();
+
+  // MODE (GPIO 25): alterna TEST MODE <-> PERFORM MODE.
+  // Al cambiar, se detiene todo (audio, secuencia y LEDs) para empezar limpio.
+  if (btnMode.isPressed()) {
+    myDFPlayer.pause();
+    isPlaying = false;
+    detenerLEDsInmediatamente();
+    if (ledEncendidoTest != -1) {
+      enviarComando(ledEncendidoTest, "OFF");
+      ledEncendidoTest = -1;
+    }
+    modo = (modo == MODO_PERFORM) ? MODO_TEST : MODO_PERFORM;
+    Serial.println(modo == MODO_TEST ? F("Modo: TEST MODE") : F("Modo: PERFORM MODE"));
+    actualizarLCD();
+  }
+
+  // ---------------- TEST MODE ----------------
+  if (modo == MODO_TEST) {
+    // ANTERIOR: LED seleccionado - 1 (circular)
+    if (btnPrev.isPressed()) {
+      ledSeleccionado = (ledSeleccionado == 0) ? (MAX_CLIENTES - 1) : (ledSeleccionado - 1);
+      Serial.print(F("LED seleccionado: "));
+      Serial.println(ledSeleccionado);
+      actualizarLCD();
+    }
+
+    // SIGUIENTE: LED seleccionado + 1 (circular)
+    if (btnNext.isPressed()) {
+      ledSeleccionado = (ledSeleccionado + 1) % MAX_CLIENTES;
+      Serial.print(F("LED seleccionado: "));
+      Serial.println(ledSeleccionado);
+      actualizarLCD();
+    }
+
+    // PLAY presionado: enciende el LED seleccionado
+    if (btnPlay.isPressed()) {
+      ledEncendidoTest = ledSeleccionado;
+      enviarComando(ledEncendidoTest, "ON");
+    }
+
+    // PLAY soltado: apaga el LED que se encendió (aunque la selección haya cambiado)
+    if (btnPlay.isReleased() && ledEncendidoTest != -1) {
+      enviarComando(ledEncendidoTest, "OFF");
+      ledEncendidoTest = -1;
+    }
+
+    actualizarLedMaestro();
+    return;  // en TEST MODE no corren los botones ni la secuencia de PERFORM
+  }
+
+  // ---------------- PERFORM MODE ----------------
 
   // STOP (GPIO 27): pausa la pista y apaga los LEDs ya
   if (btnReset.isPressed()) {
@@ -774,18 +851,6 @@ void loop() {
       Serial.println(F("-> Cambiado en silencio. Presiona PLAY."));
     }
     actualizarLCD();
-  }
-
- // Botón directo: LED del cliente 4 mientras se mantenga presionado
-  if (btnLed.isPressed()) {
-    Serial.print("Botón Cliente 4 presionado");
-    enviarComando(CLIENTE_BOTON, "ON");
-  }
-  if (btnLed.isReleased()) {
-    // Si la secuencia está usando justo ese LED, no lo apagues desde aquí
-    if (clienteEncendidoActual != CLIENTE_BOTON) {
-      enviarComando(CLIENTE_BOTON, "OFF");
-    }
   }
 
   // 4. Avanzar la secuencia de LEDs del villancico en turno (si está sonando)
