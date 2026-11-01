@@ -41,6 +41,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <ezButton.h>
 #include "DFRobotDFPlayerMini.h"
+#include <lwip/sockets.h>
 
 const char* ssid     = "constelacion";
 const char* password = "01Constelacion01";
@@ -122,6 +123,14 @@ void aceptarConexionNueva() {
     if (!pendientes[i] || !pendientes[i].connected()) {
       pendientes[i] = nuevoCliente;
       pendientes[i].setNoDelay(true);
+      pendientes[i].setTimeout(200);  // readStringUntil nunca espera más de 200ms
+      // TCP keepalive: detecta un cliente caído en ~5 s (2s inactivo + 3 sondeos de 1s)
+      int fd = pendientes[i].fd();
+      int on = 1, idle = 2, intvl = 1, cnt = 3;
+      setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on));
+      setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
+      setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
+      setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt));
       pendienteInicio[i] = millis();
       Serial.print(">>> Nueva conexión en espera de identificación (slot temporal ");
       Serial.print(i);
@@ -588,7 +597,19 @@ void enviarComando(uint8_t clientIndex, const char* comando) {
 //      Serial.println(clientIndex);
 //      return;
 //    }
-    clientes[clientIndex].println(comando);
+    // Escritura NO bloqueante directo al socket (MSG_DONTWAIT): si el buffer
+    // de envío no acepta el comando completo, el cliente está muerto y se libera.
+    char buf[24];
+    int esperados = snprintf(buf, sizeof(buf), "%s\r\n", comando);
+    int escritos = send(clientes[clientIndex].fd(), buf, esperados, MSG_DONTWAIT);
+    if (escritos != esperados) {
+      // El socket está muerto (cliente caído sin cerrar): libera el slot ya
+      // en vez de seguir intentando escribirle.
+      Serial.print(">>> Fallo de escritura, liberando cliente ");
+      Serial.println(clientIndex);
+      clientes[clientIndex].stop();
+      return;
+    }
     Serial.print("[Enviado: ");
     Serial.print(comando);
     Serial.print("] a cliente ");
@@ -733,6 +754,16 @@ void setup() {
 }
 
 void loop() {
+  // Diagnóstico: avisa si una vuelta del loop tardó demasiado (algo bloqueó)
+  static unsigned long ultimaVuelta = 0;
+  unsigned long ahoraLoop = millis();
+  if (ultimaVuelta != 0 && ahoraLoop - ultimaVuelta > 300) {
+    Serial.print(F(">>> Loop lento: "));
+    Serial.print(ahoraLoop - ultimaVuelta);
+    Serial.println(F(" ms"));
+  }
+  ultimaVuelta = ahoraLoop;
+
   // 1. Aceptar nuevas conexiones (van a la zona de espera, sin índice aún)
   aceptarConexionNueva();
 
