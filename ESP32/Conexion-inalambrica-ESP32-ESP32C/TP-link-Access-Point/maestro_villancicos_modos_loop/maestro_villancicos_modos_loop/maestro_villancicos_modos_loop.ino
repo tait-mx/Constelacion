@@ -84,7 +84,8 @@ ezButton btnPrev(BTN_PREV_PIN);
 ezButton btnNext(BTN_NEXT_PIN);
 ezButton btnMode(BTN_MODE_PIN);
 ezButton btnLoop(BTN_LOOP_PIN);
-bool modoLoop = false;
+enum ModoLoop { LOOP_OFF, LOOP_1, LOOP_ALL };
+ModoLoop modoLoop = LOOP_OFF;
 
 HardwareSerial DFPlayerSerial(2); // UART2 nativo del ESP32
 DFRobotDFPlayerMini myDFPlayer;
@@ -169,8 +170,8 @@ void procesarIdentificaciones() {
           clientes[idx] = pendientes[i];
           clientes[idx].setTimeout(100);  // límite duro: nunca esperar más de 100ms en este socket
           pendientes[i] = WiFiClient();  // libera el slot de espera
-          Serial.print(">>> Cliente identificado como índice ");
-          Serial.println(idx);
+          Serial.print(">>> Cliente identificado: ");
+          Serial.println(linea);
         } else {
           Serial.print(">>> ID inválido recibido: ");
           Serial.println(linea);
@@ -572,17 +573,22 @@ void lcdImprimirFila(uint8_t fila, const char* texto) {
   lcd.print(buf);
 }
 
-// TEST MODE:    "TEST MODE" / "LED n"
-// PERFORM MODE: "PERFORM MODE" / nombre del villancico seleccionado
+// TEST MODE:    "TEST" / "LED n"
+// PERFORM MODE: "PERFORM" / nombre del villancico seleccionado
 // Llamar al arrancar, al cambiar de modo y al cambiar la selección.
 void actualizarLCD() {
   if (modo == MODO_TEST) {
     char buf[17];
     snprintf(buf, sizeof(buf), "LED %u", ledSeleccionado);
-    lcdImprimirFila(0, "TEST MODE");
+    lcdImprimirFila(0, "TEST");
     lcdImprimirFila(1, buf);
   } else {
-    lcdImprimirFila(0, "PERFORM MODE");
+    const char* sufijo = "";
+    if (modoLoop == LOOP_1)        sufijo = " LOOP 1";
+    else if (modoLoop == LOOP_ALL) sufijo = " LOOP ALL";
+    char buf[17];
+    snprintf(buf, sizeof(buf), "PERFORM%s", sufijo);  // máx. 16 caracteres
+    lcdImprimirFila(0, buf);
     lcdImprimirFila(1, nombres[currentVillancico]);
   }
 }
@@ -683,18 +689,25 @@ void actualizarSecuencia() {
     }
     stepEnCurso = false;
 
-    if (currentStep + 1 >= largoActual) {
-  if (modoLoop) {
-    myDFPlayer.playMp3Folder(currentVillancico + 1);
-    iniciarSecuenciaDesdeElInicio();
-  } else {
-    secuenciaTerminada = true;
-    isPlaying = false;
-    Serial.println(">>> Villancico terminado. Presiona Play o Siguiente/Anterior.");
-  }
-} else {
-  currentStep++;
-}
+   if (currentStep + 1 >= largoActual) {
+      if (modoLoop == LOOP_1) {
+        // Repite el mismo villancico
+        myDFPlayer.playMp3Folder(currentVillancico + 1);
+        iniciarSecuenciaDesdeElInicio();
+      } else if (modoLoop == LOOP_ALL) {
+        // Pasa al siguiente (circular: tras el último vuelve al primero)
+        currentVillancico = (currentVillancico + 1) % NUM_VILLANCICOS;
+        myDFPlayer.playMp3Folder(currentVillancico + 1);
+        iniciarSecuenciaDesdeElInicio();
+        actualizarLCD();
+      } else {
+        secuenciaTerminada = true;
+        isPlaying = false;
+        Serial.println(F(">>> Villancico terminado. Presiona Play o Siguiente/Anterior."));
+      }
+    } else {
+      currentStep++;
+    }
   }
 }
 
@@ -895,11 +908,16 @@ void loop() {
     actualizarLCD();
   }
 
-// LOOP (GPIO 26) : Activa o desactiva el loop de un track solamente. 
-if (btnLoop.isPressed()) {
-  modoLoop = !modoLoop;
-  Serial.println(modoLoop ? F("Loop: ACTIVADO") : F("Loop: DESACTIVADO"));
-}
+// LOOP (GPIO 26): OFF -> LOOP 1 -> LOOP ALL -> OFF ...
+  if (btnLoop.isPressed()) {
+    if (modoLoop == LOOP_OFF)      modoLoop = LOOP_1;
+    else if (modoLoop == LOOP_1)   modoLoop = LOOP_ALL;
+    else                           modoLoop = LOOP_OFF;
+
+    Serial.println(modoLoop == LOOP_1 ? F("Loop: 1") :
+                   modoLoop == LOOP_ALL ? F("Loop: ALL") : F("Loop: OFF"));
+    actualizarLCD();
+  }
 
   // 4. Avanzar la secuencia de LEDs del villancico en turno (si está sonando)
   actualizarSecuencia();
