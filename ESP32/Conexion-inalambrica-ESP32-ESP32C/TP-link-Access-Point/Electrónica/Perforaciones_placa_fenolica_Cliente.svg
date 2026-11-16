@@ -18,7 +18,29 @@
    inkscape:version="0.92.2 5c3e80d, 2017-08-06"
    sodipodi:docname="Perforaciones_placa_fenolica_Cliente.svg">
   <defs
-     id="defs2" />
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1210">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1206" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop1208" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1210"
+       id="linearGradient1212"
+       x1="257.31198"
+       y1="85.491753"
+       x2="360.22388"
+       y2="85.491753"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -27,7 +49,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="640.63469"
+     inkscape:cx="790.18755"
      inkscape:cy="471.42655"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -37,7 +59,8 @@
      inkscape:window-height="1035"
      inkscape:window-x="0"
      inkscape:window-y="1"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     inkscape:snap-global="false" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -46,7 +69,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -3502,5 +3525,43 @@
        cx="242.61349"
        cy="246.30396"
        r="4.5053716" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.92686033;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.93379792"
+       id="rect1200"
+       width="176.04312"
+       height="127.96872"
+       x="285.30066"
+       y="165.3261" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#f2f2f2;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.93379792"
+       x="231.32826"
+       y="336.65778"
+       id="text1204"
+       transform="rotate(-18.715301)"><tspan
+         sodipodi:role="line"
+         id="tspan1202"
+         x="231.32826"
+         y="336.65778"
+         style="font-size:22.57777786px;fill:#000000;fill-opacity:1;stroke:#f2f2f2;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.93379792;-inkscape-font-specification:'sans-serif Bold';font-family:sans-serif;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">Cargador</tspan></text>
+    <text
+       transform="rotate(-18.715301)"
+       id="text1216"
+       y="255.8244"
+       x="-17.269352"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#f2f2f2;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.93379792"
+       xml:space="preserve"><tspan
+         style="font-size:22.57777786px;fill:#000000;fill-opacity:1;stroke:#f2f2f2;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.93379792;-inkscape-font-specification:'sans-serif Bold';font-family:sans-serif;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal"
+         y="255.8244"
+         x="-17.269352"
+         id="tspan1214"
+         sodipodi:role="line">Booster</tspan></text>
+    <rect
+       y="165.3261"
+       x="22.841986"
+       height="127.96872"
+       width="176.04312"
+       id="rect1218"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.92686033;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.93379792" />
   </g>
 </svg>
