@@ -1,6 +1,6 @@
 #include <WiFi.h>
 
-// Cliente 6
+// Cliente 7
 
 // Configuración de Red (Asegúrate de coincidir exactamente con el Maestro)
 const char* ssid     = "constelacion"; 
@@ -9,13 +9,13 @@ const char* host     = "192.168.0.150";
 const uint16_t port  = 8080;
 
 // Configuración de Hardware ESP32-C3 SuperMini
-const int LED_PIN = 8; // Sink: LOW = ON, HIGH = OFF
+const int LED_PIN = 3; // Sink: LOW = ON, HIGH = OFF
 
 // Identificación fija de este cliente ante el maestro.
 // IMPORTANTE: cambiar este valor (0, 1, 2 o 3) en cada dispositivo antes
 // de flashearlo, para que siempre ocupe el mismo índice en el arreglo
 // `clientes[]` del maestro, sin importar el orden en que se conecte.
-const int MI_ID = 6;
+const int MI_ID = 7;
 
 // Parámetros de Tiempo y Timeout (en ms)
 const unsigned long TCP_TIMEOUT_MS  = 300; 
@@ -34,12 +34,12 @@ void setup() {
   
   // Configuración del LED (Lógica Sink: APAGADO al iniciar)
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
 
   for(int i=0; i <= 3; i++) {
-  digitalWrite(LED_PIN, LOW);
-  delay(100);
   digitalWrite(LED_PIN, HIGH);
+  delay(100);
+  digitalWrite(LED_PIN, LOW);
   delay(100);
   }
 
@@ -55,7 +55,7 @@ void setup() {
   // Configuración de red para alta estabilidad en puerto USB
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
-  WiFi.setTxPower(WIFI_POWER_8_5dBm); // Mantiene estable la línea de energía USB CDC
+  WiFi.setTxPower(WIFI_POWER_13dBm); // Mantiene estable la línea de energía USB CDC
   
   conectarWiFi();
 }
@@ -63,14 +63,14 @@ void setup() {
 void loop() {
   // 1. Verificación constante de capa de transporte (WiFi)
   if (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(LED_PIN, HIGH); // Apagar LED sin red
+    digitalWrite(LED_PIN, LOW); // Apagar LED sin red
     conectarWiFi();
     return;
   }
 
   // 2. Verificación y reconexión activa del Socket TCP
   if (!client.connected()) {
-    digitalWrite(LED_PIN, HIGH); // Apagar LED sin Socket TCP
+    digitalWrite(LED_PIN, LOW); // Apagar LED sin Socket TCP
     conectarTCP();
     return;
   }
@@ -85,9 +85,9 @@ void loop() {
       Serial.println(payload);
 
       if (payload.equalsIgnoreCase("ON")) {
-        digitalWrite(LED_PIN, LOW);   // Encender (Sink)
+        digitalWrite(LED_PIN, HIGH);   // Encender (Sink)
       } else if (payload.equalsIgnoreCase("OFF")) {
-        digitalWrite(LED_PIN, HIGH);  // Apagar (Sink)
+        digitalWrite(LED_PIN, LOW);  // Apagar (Sink)
       }
     }
   }
@@ -109,8 +109,6 @@ void conectarWiFi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    WiFi.setTxPower(WIFI_POWER_8_5dBm);
-    Serial.printf("TxPower: %d\n", (int)WiFi.getTxPower());   // debe salir 34 (= 8.5 dBm)
     Serial.println("\n[WiFi] ¡Conectado de forma exitosa!");
     Serial.print("[WiFi] IP del C3: ");
     Serial.println(WiFi.localIP());
